@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#### SHB - Shared Hosting Backup
+#
+#### This script will back up all shared hosting files incrementally - ssh  access required
+#
+####
+
+
+## variables
+
+hostUname=""
+hostPass=""
+hostURL=""
+hostPath=""
+
+savePath=""	## path on local machine to save files to
+rotateTime="30" ## this value is specified in days
+now=$(date +"%m_%d_%Y")
+
+
+## Main Script
+
+# check save path exists
+if [ ! -d "$savePath"/current ]; then
+    mkdir -p "$savePath"/current ;
+fi
+
+
+# rsync remote directory
+
+rsync -avz -e ssh "$hostUname"@"$hostURL":"$hostPath" "$savePath"/current
+
+# if rsync successful create archive
+	if [ "$?" -eq "0" ]
+		then
+			tar -czf "$savePath"/Backup_$now.tgz "$savePath"/current
+	fi
+
+# remove ye olde backups
+
+find "$savePath" -type f -mtime +$rotateTime -exec rm {} \;
+
+# and we're spent.......
